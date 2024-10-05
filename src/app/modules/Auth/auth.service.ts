@@ -11,6 +11,20 @@ import { createToken, verifyToken } from './auth.utils';
 const loginUser = async (payload: TLoginUser) => {
   // checking if the user is exist
   const user = await User.findOne({ email: payload.email });
+  if (!user?.password && payload.password) {
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Please login with google!');
+  }
+
+  if (user && user.password) {
+    const isPasswordMatched = await bcryptJs.compare(
+      payload?.password as string,
+      user.password!,
+    );
+
+    if (!isPasswordMatched) {
+      throw new AppError(httpStatus.NOT_FOUND, 'Password Incorrect!');
+    }
+  }
 
   if (!user) {
     const user = await registerUser(payload);
@@ -18,6 +32,7 @@ const loginUser = async (payload: TLoginUser) => {
     const jwtPayload = {
       email: user.email,
       role: user.role,
+      mongoId: user._id,
     };
 
     const accessToken = createToken(
@@ -37,10 +52,10 @@ const loginUser = async (payload: TLoginUser) => {
       refreshToken,
     };
   } else {
-    if (payload.password) {
+    if (payload.password && user.password) {
       const isPasswordMatched = await bcryptJs.compare(
         payload.password,
-        user.password,
+        user.password!,
       );
 
       if (!isPasswordMatched) {
@@ -50,7 +65,7 @@ const loginUser = async (payload: TLoginUser) => {
     const jwtPayload = {
       email: user.email,
       role: user.role,
-      _id: user._id,
+      mongoId: user._id,
     };
 
     const accessToken = createToken(
@@ -70,7 +85,6 @@ const loginUser = async (payload: TLoginUser) => {
       refreshToken,
     };
   }
-  // checking if the user is already deleted
 };
 
 const refreshToken = async (token: string) => {
@@ -89,6 +103,7 @@ const refreshToken = async (token: string) => {
   const jwtPayload = {
     email: user.email,
     role: user.role,
+    mongoId: user._id,
   };
 
   const accessToken = createToken(
@@ -102,7 +117,12 @@ const refreshToken = async (token: string) => {
   };
 };
 
+
 const registerUser = async (userData: TLoginUser) => {
+  const userInfo = await User.findOne({ email: userData.email });
+  if (userInfo) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'User is already exist');
+  }
   if (userData.password) {
     userData.password = await bcryptJs.hash(
       userData.password,
@@ -120,4 +140,5 @@ export const AuthServices = {
   loginUser,
   refreshToken,
   registerUser,
+
 };

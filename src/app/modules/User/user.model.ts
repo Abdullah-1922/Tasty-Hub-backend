@@ -3,8 +3,7 @@
 import mongoose, { Schema } from 'mongoose';
 import { IUser } from './user.interface';
 import { validateEmail } from './user.utils';
-import bcrypt from 'bcryptjs';
-import config from '../../config';
+
 
 
 const userSchema: Schema<IUser> = new mongoose.Schema({
@@ -50,13 +49,6 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
   isPremium: { type: Boolean,default:false },
 });
 
-userSchema.pre('save', async function (next) {
-  
-  if (this.isModified('password') && this.password) {
-    const salt = await bcrypt.genSalt(Number(config.bcrypt_salt_rounds) );
-    this.password = await bcrypt.hash(this.password, salt);
-  }
-  next();
-});
+
 
 export const User = mongoose.model<IUser>('User', userSchema);

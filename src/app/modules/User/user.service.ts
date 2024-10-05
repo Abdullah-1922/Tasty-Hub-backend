@@ -4,12 +4,8 @@ import { UserSearchableFields } from './user.constant';
 import { IUser } from './user.interface';
 import { User } from './user.model';
 
-const createUser = async (user: IUser) => {
-
-  return await User.create(user);
-};
-
 const findUserById = async (userId: string) => {
+  console.log(userId);
   return await User.findById(userId);
 };
 
@@ -43,7 +39,6 @@ const deleteUserById = async (userId: string) => {
 };
 
 export const UserService = {
-  createUser,
   findUserById,
   getAllUsers,
   updateUserById,
