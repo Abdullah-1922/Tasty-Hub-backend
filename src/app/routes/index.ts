@@ -4,7 +4,7 @@ import { AuthRoutes } from '../modules/Auth/auth.route';
 import { UserRoutes } from '../modules/User/user.route';
 import { RecipeRoutes } from '../modules/Recipe/recipe.route';
 import { CommentRoutes } from '../modules/comment/comment.route';
-import { BlogRouter } from '../modules/News/blog.route';
+import { BlogRouter } from '../modules/Blog/blog.route';
 import { CategoryRoutes } from '../modules/category/category.route';
 
 type TModuleRoutes = {
