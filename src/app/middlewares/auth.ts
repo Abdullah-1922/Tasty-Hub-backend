@@ -9,7 +9,7 @@
 
 // const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
 //   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    
+
 //     const token = req.cookies.accessToken;
 //      console.log(token);
 //     // checking if the token is missing
@@ -60,20 +60,27 @@ import catchAsync from "../utils/catchAsync";
 const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
-    
-    const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null; // Get the token from the Authorization header
-
-  
+    const token =
+      authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+       : null; // Get the token from the Authorization header
 
     // Check if the token is missing
     if (!token) {
-      throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized! Token is missing.");
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        "You are not authorized! Token is missing.",
+      );
     }
+
 
     // Check if the given token is valid
     let decoded: JwtPayload;
     try {
-      decoded = jwt.verify(token, config.jwt_access_secret as string) as JwtPayload;
+      decoded = jwt.verify(
+        token,
+        config.jwt_access_secret as string,
+      ) as JwtPayload;
     } catch (error) {
       throw new AppError(httpStatus.UNAUTHORIZED, "Invalid token.");
     }
@@ -90,8 +97,14 @@ const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
     }
 
     // Check if the user has the required roles
-    if (requiredRoles.length > 0 && !requiredRoles.includes(role as keyof typeof USER_ROLE)) {
-      throw new AppError(httpStatus.FORBIDDEN, "You do not have permission to access this resource.");
+    if (
+      requiredRoles.length > 0 &&
+      !requiredRoles.includes(role as keyof typeof USER_ROLE)
+    ) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "You do not have permission to access this resource.",
+      );
     }
 
     // Attach the user data to the request object
@@ -101,4 +114,3 @@ const auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
 };
 
 export default auth;
-

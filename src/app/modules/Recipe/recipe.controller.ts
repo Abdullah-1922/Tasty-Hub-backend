@@ -3,6 +3,7 @@ import catchAsync from "../../utils/catchAsync";
 
 import sendResponse from "../../utils/sendResponse";
 import { RecipeServices } from "./recipe.service";
+import { User } from "../User/user.model";
 
 const createRecipe = catchAsync(async (req, res) => {
   const result = await RecipeServices.createRecipe(req.body);
@@ -14,7 +15,20 @@ const createRecipe = catchAsync(async (req, res) => {
   });
 });
 const getAllRecipe = catchAsync(async (req, res) => {
-  const { meta, result } = await RecipeServices.getAllRecipe(req?.query);
+let user;
+
+  try{
+    const userData= await User.findOne({email:req.user.email})
+    user=userData
+  }catch(err){
+    console.log(err)
+  }
+
+
+
+
+  const { meta, result } = await RecipeServices.getAllRecipe(req?.query,user);
+ 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

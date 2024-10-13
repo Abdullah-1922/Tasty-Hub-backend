@@ -65,6 +65,10 @@ const followUser = async (
   userId: Types.ObjectId,
   targetUserId: Types.ObjectId,
 ) => {
+
+  if (userId === targetUserId) {
+    throw new AppError(400, "You can't follow yourself");
+  }
   const user = await User.findById(userId);
   const targetUser = await User.findById(targetUserId);
 
@@ -83,6 +87,9 @@ const followUser = async (
 };
 
 const unFollowUser = async (userId: string, targetUserId: string) => {
+  if (userId === targetUserId) {
+    throw new AppError(400, "You can't unfollow yourself");
+  }
   const user = await User.findById(userId);
   const targetUser = await User.findById(targetUserId);
 

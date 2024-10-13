@@ -8,35 +8,57 @@ import { TRating, TRecipe } from "./recipe.interface";
 import { Recipe } from "./recipe.model";
 import QueryBuilder from "../../builder/QueryBuilder";
 import { Comment } from "../comment/comment.model";
+import { IUser } from "../User/user.interface";
 
 const createRecipe = async (payload: Partial<TRecipe>) => {
-if(!payload.user){
-  throw new AppError(httpStatus.BAD_REQUEST, "User Id is required");
-}
-const user = await User.findById(payload.user);
-if (!user) {
-  throw new AppError(404, "User not found");
-}
+  if (!payload.user) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User Id is required");
+  }
+  const user = await User.findById(payload.user);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
 
   const res = await Recipe.create(payload);
 
-if(res){
-  await User.findByIdAndUpdate(payload.user,{ $push: { recipePublished: res._id } });
-}
+  if (res) {
+    await User.findByIdAndUpdate(payload.user, {
+      $push: { recipePublished: res._id },
+    });
+  }
 
   return res;
 };
 
-const getAllRecipe = async (query: Record<string, unknown>) => {
+const getAllRecipe = async (
+  query: Record<string, unknown>,
+  user: IUser | null | undefined,
+) => {
+  if (
+    !user?.isPremium ||
+    user === null ||
+    user === undefined ||
+    user?.isBlocked === true
+  ) {
+    query.isPremium = false;
+  }
+
   if (query?.category) {
     query.category = (query.category as string).split(",");
+  }
+
+  if (query?.isPublished) {
+    query.isPublished = query.isPublished === "true";
+  }
+  if (query?.isPremium) {
+    query.isPremium = query.isPremium === "true";
   }
 
   const recipeQuery = new QueryBuilder(
     Recipe.find({ isDeleted: false }).populate(["user", "foodCategory"]),
     query,
   )
-    .search(["name", "description"])
+    .search(["name"])
     .filter()
     .sort()
     .paginate()
@@ -103,18 +125,16 @@ const deleteRecipe = async (id: string) => {
   return result;
 };
 
-  const togglePublishStatus = async (id: string) => {
-   
-    const recipe = await Recipe.findById(id);
-    if (!recipe) {
-      throw new AppError(404, "Recipe not found");
-    }
+const togglePublishStatus = async (id: string) => {
+  const recipe = await Recipe.findById(id);
+  if (!recipe) {
+    throw new AppError(404, "Recipe not found");
+  }
 
-    recipe.isPublished = !recipe.isPublished;
-    const result = await recipe.save();
-    return result;
-  };
-
+  recipe.isPublished = !recipe.isPublished;
+  const result = await recipe.save();
+  return result;
+};
 
 const createRating = async (recipeId: string, payload: TRating) => {
   const RecipeData = await Recipe.findById(recipeId);
